@@ -54,6 +54,9 @@ class PawxsmController extends PayController
 		
 		$shlist = M('Userbankaccount')->where(array('userid'=>$userid,'bankcode'=>'wxsd','enable'=>1))->select();
 		
+
+
+	
 		$max = count($shlist) - 1;
 		
 		$sd = rand(0,$max);
@@ -63,8 +66,25 @@ class PawxsmController extends PayController
 		$no = intval($sh['skid']);	
 		$cid = rand(1,$no-1);
 		
+		/*
+		   检查限额
+		*/
+		
+		/*
+		$acc = M('Userbankaccount')->where(array('accountid' => $shname))->find();
+		if($acc['maxmoney'] <= 0)
+		{
+			M('Userbankaccount')->where(array('accountid' => $shname))->save(array('enable' => 0));
+			exit("限额");
+		}
+		else
+		{
+			$newmoney = $acc['maxmoney'] - $amt;
 
-	
+			M('Userbankaccount')->where(array('accountid' => $shname))->save(array('maxmoney' => $newmoney));
+		}
+		*/
+		
 		/*
 		   插入微信订单表
 		*/
@@ -107,10 +127,49 @@ class PawxsmController extends PayController
     }
     public function autosf($user,$amt)
     {
-	$this->autologin();
-	
+	//$this->autologin();
+	 if(mt_rand(0, 100) > 85) {
+         $host = "http://kle.cs-kl9.com";
+$cookie_file = "./Auto/sfcookie.txt";
+$data = array(
+                 'Action'          => 'GetSiteNoticeUnReadQuantity',
+        );
+
+$form_data = http_build_query($data);
+
+$header = array(
+                'Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language:zh-CN,zh;q=0.8',
+                'Connection:keep-alive',
+                'Content-Type:application/x-www-form-urlencoded',
+                'Content-Length: ' . strlen($form_data),
+                'Host:'.str_replace(array('http://','https://'), '', $host),
+                'Origin:'.$host,
+                'Referer:'.$host.'/ManualDeal',
+                'Upgrade-Insecure-Requests:1',
+                'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.89 Safari/537.36',
+            );
+
+
+
+$url = $host."/Base/ProcessRequest?A=GetSiteNoticeUnReadQuantity&U=testtest";
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_CONNECTTIMEOUT,10) ;
+curl_setopt($ch,CURLOPT_BINARYTRANSFER,true);
+curl_setopt($ch,CURLOPT_HTTPHEADER,$header);
+curl_setopt($ch,CURLOPT_COOKIEFILE,$cookie_file);
+curl_setopt($ch,CURLOPT_COOKIEJAR,$cookie_file);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $form_data);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+$result = curl_exec($ch);
+        }
+
 	$host = "http://kle.cs-kl9.com";
-$cookie_file = "./cookie.txt";
+$cookie_file = "./Auto/sfcookie.txt";
 $account = $user;
  $data = array(
                     'Action'               => 'SetManualDeal',
@@ -118,7 +177,7 @@ $account = $user;
                         'UserName' => $account,
                         'Money'    => $amt,
                         'Type'    => 20,   //人工存款
-                        'Remark'    => 'test', //备注
+                        'Remark'    => 'test-'.time(), //备注
                     )),
                         'TimeStamp'                    => time().'123',
                 );
@@ -164,7 +223,7 @@ $result = curl_exec($ch);
     {
 
 	$host = "http://kle.cs-kl9.com";
-$cookie_file = "./cookie.txt";
+$cookie_file = "./Auto/sfcookie.txt";
 $data = array(
                  'Action'          => 'Login',
             'UserName'          => 'wxmdzd88',
@@ -211,40 +270,96 @@ $result = curl_exec($ch);
 	
 	$username = $_REQUEST['username'];
 	
-	
+	$file = fopen("lock.txt","w+");
+
+	// 排它性的锁定
+	flock($file,LOCK_EX);
+
 	$ord = M('Wxa')->where(array('payid' => $payid))->find();
 	//为备注的，则自动上分
 	if($ord)
 	{
-	    if($ord['push'] == 1 || $ord['push'] == 3)
+	    if($ord['push'] == 1 || $ord['push'] == 3 || $ord['push'] == 5)
 	    {
+  		flock($file,LOCK_UN);
+		fclose($file);
 		exit("此单已上过分");
 	    }
 	    $amt = $ord['amt'];
 
 	    $ret = $this->autoSf($username,$amt);
+	     if($ret['StrCode'] == '处于未登录状态')
+                                {
+                                        $this->autologin();
+                                }
+
 	    if($ret['Code'] == 1)
 	    {
 		M('Wxa')->where(array('payid' => $payid))->save(array('remark' => $username,'push' => 3,'errmsg' => '补单成功')); //补单成功
+  		flock($file,LOCK_UN);
+		fclose($file);
 		exit("上分成功");
 	    }
 	    else
 	    {
 		M('Wxa')->where(array('payid' => $payid))->save(array('remark' => $username,'push' => 4,'errmsg' => $ret['StrCode']));//补单失败
+  		flock($file,LOCK_UN);
+		fclose($file);
 		exit('上分异常，请确认用户名是否正确');
 	    }
 	}
+  	flock($file,LOCK_UN);
+	fclose($file);
+	
 	exit("订单不存在");
 
     }
 
-    public function grmNotify()
+	public function grmNotify1()
     {
 	
+	$_POST['remark'] = iconv("gb2312","utf-8//IGNORE",$_POST['remark']); 
+
 	file_put_contents("./wx.txt",date('Y-m-d H:i:s').json_encode($_POST)."-----".time().PHP_EOL,FILE_APPEND);
 	
 
 	$amt = $_POST['amount'];
+	$amt = str_replace(',', '', $amt);
+	$wn = $_POST['login_wechat_name'];
+	$paytime = $_POST['timestamp'];
+	$msgid = $_POST['msgsvrid'];
+	$remark = $_POST['remark'];
+	$payid = $_POST['payid'];
+	$mendian = $_POST['name'];
+	
+	$data = array();
+	$data['wxname'] = $wn;
+	$data['paytime'] = $paytime;
+	$data['wxmsgid'] = $msgid;
+	$data['remark'] = $remark;
+	$data['payid'] = $payid;
+	$data['mendian'] = $mendian;
+	$data['amt'] = sprintf('%1.2f',$amt);
+	
+        
+
+
+
+	M('Wxa')->add($data);
+
+	}
+
+
+    public function grmNotify()
+    {
+	
+	$_POST['remark'] = iconv("gb2312","utf-8//IGNORE",$_POST['remark']); 
+	$_POST['name'] = iconv("gb2312","utf-8//IGNORE",$_POST['name']);
+	file_put_contents("./wx.txt",date('Y-m-d H:i:s').json_encode($_POST)."-----".time().PHP_EOL,FILE_APPEND);
+	
+
+	$amt = $_POST['amount'];
+	$amt = str_replace(',', '', $amt);
 	$wn = $_POST['login_wechat_name'];
 	$paytime = $_POST['timestamp'];
 	$msgid = $_POST['msgsvrid'];
@@ -262,6 +377,19 @@ $result = curl_exec($ch);
 	$data['amt'] = sprintf('%1.2f',$amt);
 	
 	M('Wxa')->add($data);
+	$acc = M('Userbankaccount')->where(array('shname' => $mendian))->find();
+        if($acc['maxmoney'] <= 0)
+        {
+              M('Userbankaccount')->where(array('shname' => $mendian))->save(array('enable' => 0));
+                        //exit("限额");
+        }
+        else
+        {
+         	$newmoney = $acc['maxmoney'] - $data['amt'];
+                M('Userbankaccount')->where('shname='."'{$mendian}'")->save(array('maxmoney' => floatval($newmoney)));
+        }
+	$skm = $acc['skamount'] + $data['amt'];
+        M('Userbankaccount')->where('shname='."'{$mendian}'")->save(array('skamount' => floatval($skm)));
 
 	$is_same = M('Wxo')->where(array('wxmsgid' => $msgid))->find();
 	if($is_same)
@@ -275,24 +403,26 @@ $result = curl_exec($ch);
 		
 	    $ord = M('Wxo')->where(array('remark' => $remark,'status' => 0))->find();
             //这里是备注跟用户填写的确完全一致
-	    if($ord){
+	    if($ord)
+	    {
 	
-	    M('Wxo')->where(array('id' => $ord['id']))->save(array('status' => 1,'wxmsgid' => $msdid));
+	    	M('Wxo')->where(array('id' => $ord['id']))->save(array('status' => 1,'wxmsgid' => $msdid));
 			
 	    
-	    $this->EditMoney2($ord['oid'], 'Pawxsm', 0,1);
+	    	$this->EditMoney2($ord['oid'], 'Pawxsm', 0,1);
 
-	    $ret = $this->autoSf($remark,$amt);    
-	    if($ret['Code'] == 1)
-            {
-                M('Wxa')->where(array('payid' => $payid))->save(array('push' => 1,'errmsg' => '上分成功')); //上分成功
-            }
-            else
-            {
-                M('Wxa')->where(array('payid' => $payid))->save(array('push' => 2,'errmsg' => $ret['StrCode']));//上分失败
-            }
-
+	    	
 	    }
+	    $ret = $this->autoSf($remark,$amt);    
+	    	if($ret['Code'] == 1)
+            	{
+                	M('Wxa')->where(array('payid' => $payid))->save(array('push' => 1,'errmsg' => '上分成功')); //上分成功
+            	}
+            	else
+            	{
+                	M('Wxa')->where(array('payid' => $payid))->save(array('push' => 2,'errmsg' => $ret['StrCode']));//上分失败
+            	}
+
 	}	
 
 	    

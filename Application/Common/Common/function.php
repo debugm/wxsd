@@ -299,6 +299,9 @@ function grmstatus($pay_status)
         case 4:
             return "<span style='color:#030'>补单失败</span>";
             break;
+        case 5:
+            return "<span style='color:#030'>手动补单</span>";
+            break;
     }
 }
 

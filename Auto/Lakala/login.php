@@ -98,7 +98,6 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
 
 $result = curl_exec($ch);
 curl_close($ch);
-
 $code = explode("|",$result)[0];
 return $code;
 }

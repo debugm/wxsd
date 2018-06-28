@@ -446,7 +446,7 @@
      <form role="form" id="form<?php echo ($vo["id"]); ?>" action="<?php echo U("User/Edittikuanmoney");?>">
      <input type="hidden" name="tikuanpayapiid">
      <input type="hidden" name="userid">
-    <?php $__FOR_START_2082516848__=0;$__FOR_END_2082516848__=2;for($i=$__FOR_START_2082516848__;$i < $__FOR_END_2082516848__;$i+=1){ ?><div class="tikuandiv">
+    <?php $__FOR_START_2050225575__=0;$__FOR_END_2050225575__=2;for($i=$__FOR_START_2050225575__;$i < $__FOR_END_2050225575__;$i+=1){ ?><div class="tikuandiv">
     <a class="list-group-item" style="font-size:13px;"><strong>T+<sapn style="color:#F00"><?php echo ($i); ?></span></strong>&nbsp;&nbsp;(<span>白天</span>)</a>
     <div class="input-group">
       <div class="input-group-addon"><?php echo huoqutktype();?></div>

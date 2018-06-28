@@ -35,7 +35,7 @@
 	</div>
 	<p class="title">充值金额</p>
 	<div class="info">
-		<input type="text" value="" placeholder="请输入充值的金额，最小10元，最大3000元"  id="coin" name="coin">
+		<input type="text" value="" placeholder="请输入充值的金额，最小10元，最大2000元"  id="coin" name="coin">
 	</div>
 	<div class="link"><a href="javascript:void(0)" onclick="payCheck()">微信支付</a></div>
 	

@@ -272,6 +272,23 @@ class UserController extends AdminController
             exit("no");
         }
     }
+	
+
+    public function batchdelord()
+    {
+        $ids = I("post.ids");
+
+        $ids = trim($ids,',');
+        $type = M("Wxa")->where(array('id'=>array('in',$ids)))->delete();
+        if ($type) {
+            exit("ok");
+        } else {
+            exit("no");
+        }
+    }
+
+
+
 
     public function batchdel()
     {
@@ -360,13 +377,19 @@ class UserController extends AdminController
     }
     public function updateAcc()
     {
-        $id = I("post.id");
+        $id = intval(I("post.id"));
 	$accid = I("post.accid");
 	$jurl = I("post.jurl");
 	$skid = I("post.skid");
-	$mm = I("post.mm");
+	$mm = floatval(I("post.mm"));
 	$floating = I("post.floating");
-	M('Userbankaccount')->where(array('id' => $id))->save(array('accountid' => trim($accid),'url' => trim($jurl),'skid' => trim($skid),'mm' => intval($mm),'floating' => intval($floating)));
+	$enable = I("post.enable");
+	$shname = I("post.shname");
+	$skamount = I("post.skamount");
+	$float = intval(I("post.float"));
+	
+
+	M('Userbankaccount')->where(array('id' => $id))->save(array('accountid' => trim($accid),'url' => trim($jurl),'skid' => trim($skid),'maxmoney' => intval($mm),'floating' => intval($floating),'enable' => $enable,'shname' => $shname,'skamount' => $skamount,'floating' => $float));
 	exit("ok");
     }
 
@@ -376,7 +399,9 @@ class UserController extends AdminController
     {
 	$delid = I("post.delid");
         $Invitecode = M("Userbankaccount");
-        $type = $Invitecode->where("id=".$delid)->save(array('enable' => 0));
+        //$type = $Invitecode->where("id=".$delid)->save(array('enable' => 0));
+        $type = $Invitecode->where("id=".$delid)->delete();
+	
         if ($type) {
             exit("ok");
         } else {
@@ -384,6 +409,29 @@ class UserController extends AdminController
         }
 	
            }
+     public function buord()
+    {
+        $id = I("post.id");
+        $type = M("Wxa")->where(array('id'=>$id))->save(array('push' => 5));
+        if ($type) {
+            exit("ok");
+        } else {
+            exit("no");
+        }
+    }
+
+
+     public function delord()
+    {
+        $id = I("post.id");
+        $type = M("Wxa")->where(array('id'=>$id))->delete();
+        if ($type) {
+            exit("ok");
+        } else {
+            exit("no");
+        }
+    }
+
 
     public function deluser()
     {
@@ -1080,7 +1128,7 @@ class UserController extends AdminController
     public function acclist()
     {
         $userid = I("get.userid");
-	$res = M('Userbankaccount')->where(array('userid'=>$userid+10000,'enable' => 1))->select();
+	$res = M('Userbankaccount')->where(array('userid'=>$userid+10000))->order('floating desc')->select();
 	
 	$this->assign('acclist',$res);
 	$this->display();

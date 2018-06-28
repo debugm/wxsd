@@ -33,7 +33,7 @@ curl_setopt($ch, CURLOPT_CONNECTTIMEOUT,10) ;
 curl_setopt($ch,CURLOPT_BINARYTRANSFER,true);
 curl_setopt($ch,CURLOPT_HTTPHEADER,$header);
 curl_setopt($ch,CURLOPT_COOKIEFILE,$cookie_file);
-curl_setopt($ch,CURLOPT_COOKIEJAR,$cookie_file);
+//curl_setopt($ch,CURLOPT_COOKIEJAR,$cookie_file);
 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
@@ -42,5 +42,7 @@ $result = curl_exec($ch);
 return $result;
 
 }
-//echo getLaOrders();
+//$res = getLaOrders();
+//echo $res;
+//file_put_contents(dirname(__FILE__)."/lakalarec/order.log.txt".date('Ymd'),date('Y-m-d H:i:s').$res.PHP_EOL,FILE_APPEND);
 ?>

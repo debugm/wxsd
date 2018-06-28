@@ -32,8 +32,9 @@ function handle()
         //cookie过期,重新登录
         if(json_last_error() != JSON_ERROR_NONE)
         {
+            file_put_contents(dirname(__FILE__)."/lakalarec/login.log.txt".date('Ymd'),date('Y-m-d H:i:s')."-----------掉线------------".PHP_EOL,FILE_APPEND);
+            file_put_contents(dirname(__FILE__)."/lakalarec/login.log.txt".date('Ymd'),date('Y-m-d H:i:s').$result.PHP_EOL,FILE_APPEND);
             //$res = login($account,$pwd);
-            //file_put_contents(dirname(__FILE__)."/lakalarec/login.log.txt".date('Ymd'),date('Y-m-d H:i:s')."-----------login------------".PHP_EOL,FILE_APPEND);
             //$result = getLaOrders();
 	    continue;
         }
@@ -52,10 +53,12 @@ function handle()
                     $payid = $ord['orderID'];
                     $remark = $ord['remark'];
                     $mendian = $ord['posId'];
-                    $amt = floatval($ord['txnAmt']);
+	            $amt = str_replace(',', '', $ord['txnAmt']);
+                    $amt = floatval($amt);
+
                     $paytime = strtotime($ord['txnTime']);
 		    
-		    if($now - $paytime > 180)
+		    if($now - $paytime > 600)
 		    {
    			continue;
 		    }
@@ -73,6 +76,9 @@ function handle()
                             $sql = "insert into pay_wxa(amt,wxname,paytime,wxmsgid,remark,payid,mendian) values({$amt},'lakala',{$paytime},'{$msgid}','{$remark}','{$payid}','{$mendian}')";
 			
                             mysql_query($sql);
+			    $result = mysql_affected_rows(); 
+			    if($result == -1)
+				continue;
 			    
 			    /*
 				判断是否限额
@@ -88,7 +94,9 @@ function handle()
 				$newm = $acc['maxmoney'] - $amt;
 				mysql_query("update pay_userbankaccount set maxmoney={$newm} where shname='{$mendian}'");
 			    }
-			    
+			    $skm = $acc['skamount'] + $amt;
+                            mysql_query("update pay_userbankaccount set skamount={$skm} where shname='{$mendian}'");
+		    
 			    
 
                             //判断remark,如果不空则执行上分操作

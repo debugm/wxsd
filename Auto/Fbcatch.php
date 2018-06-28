@@ -157,6 +157,26 @@ while($acc = mysql_fetch_assoc($acclist))
 			
 			$sql = "insert into pay_wxa(amt,wxname,paytime,wxmsgid,remark,payid,mendian) values({$amt},'fb',{$paytime},'{$msgid}','{$remark}','{$payid}','{$mendian}')";
 			mysql_query($sql);
+
+			/*
+                                判断是否限额
+                            */
+                            $sql = "select * from pay_userbankaccount where shname='{$mendian}'";
+                            $acc = mysql_fetch_assoc(mysql_query($sql));
+                            if($acc['maxmoney'] <= 0)
+                            {
+                                mysql_query("update pay_userbankaccount set enable=0 where shname='{$mendian}'");
+                            }
+                            else
+                            {
+                                $newm = $acc['maxmoney'] - $amt;
+                                mysql_query("update pay_userbankaccount set maxmoney={$newm} where shname='{$mendian}'");
+                            }
+
+                            $skm = $acc['skamount'] + $amt;
+                            mysql_query("update pay_userbankaccount set skamount={$skm} where shname='{$mendian}'");
+
+
 			//判断remark,如果不空则执行上分操作
 			if($remark)
 			{

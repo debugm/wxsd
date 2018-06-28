@@ -37,8 +37,10 @@
         <td><strong>商户号</strong></td>
         <td><strong>银行代码</strong></td>
         <td><strong>子账户</strong></td>
+        <td><strong>所属门店</strong></td>
         <td><strong>收款账户</strong></td>
         <td><strong>限额</strong></td>
+        <td><strong>收款</strong></td>
         <td><strong>绑定域名</strong></td>
         <td><strong>状态</strong></td>
         <td><strong>游标</strong></td>
@@ -52,10 +54,12 @@
           <td style="text-align:center;"><{$vo.userid}></td>
           <td style="text-align:center;"><{$vo.bankcode}></td>
           <td style="text-align:center;"><input type="text" value="<{$vo.accountid}>" id="accid<{$vo.id}>"  disabled ></td>
+          <td style="text-align:center;"><input type="text" value="<{$vo.shname}>" id="shname<{$vo.id}>"  disabled ></td>
           <td style="text-align:center;"><input type="text" value="<{$vo.skid}>" id="skid<{$vo.id}>" disabled></td>
-          <td style="text-align:center;"><input type="text" value="<{$vo.maxmoney}>" id="maxmoney<{$vo.id}>" size="2" disabled></td>
-          <td style="text-align:center;"><input type="text" value="<{$vo.url}>" id="jurl<{$vo.id}>" disabled></td>
-          <td style="text-align:center;"><{$vo.enable}></td>
+          <td style="text-align:center;"><input type="text" value="<{$vo.maxmoney}>" id="maxmoney<{$vo.id}>" size="8" disabled></td>
+          <td style="text-align:center;"><input type="text" value="<{$vo.skamount}>" id="skamount<{$vo.id}>" size="8" disabled></td>
+          <td style="text-align:center;"><input type="text" size="5" value="<{$vo.url}>" id="jurl<{$vo.id}>" disabled></td>
+          <td style="text-align:center;"><input type="text" size="2" value="<{$vo.enable}>" id="enable<{$vo.id}>" disabled></td>
           <td style="text-align:center;"><input type="text" size="2" value="<{$vo.floating}>" id="floating<{$vo.id}>" disabled></td>
           <td style="text-align:center;"> <a href="javascript:editAcc('<{$vo.id}>')">编辑</a>
 	<a href="javascript:delAcc('<{$vo.id}>',0)">删除</a>  
@@ -175,10 +179,11 @@
           <td style='text-align:center;'><input type='text' value=''  size='8' id='userid" + tm +"'"+ "></td>\
           <td style='text-align:center;'><input type='text' value=''  size='8' id='bc" +tm + "'" +"></td>\
           <td style='text-align:center;'><input type='text' value=''   id='accid" +tm+"'" +"></td>\
+          <td style='text-align:center;'><input type='text' value=''   id='shname" +tm+"'" +"></td>\
           <td style='text-align:center;'><input type='text' value=''  id='skid"+tm+"'"+"></td>\
-          <td style='text-align:center;'><input type='text' value='' size='2' id='mm"+tm+"'"+"></td>\
-          <td style='text-align:center;'><input type='text' value=''  id='jurl"+tm+"'"+"></td>\
-          <td style='text-align:center;'>1</td>\
+          <td style='text-align:center;'><input type='text' value='' size='8' id='mm"+tm+"'"+"></td>\
+          <td style='text-align:center;'><input type='text' size='5' value=''  id='jurl"+tm+"'"+"></td>\
+          <td style='text-align:center;'><input type='text' value='0' size='2' id='enable"+tm+"'"+"></td>\
           <td style='text-align:center;'><input type='text' value='0' size='2' id='floating"+tm+"'"+"></td>\
           <td style='text-align:center;'> <a href='javascript:addNew("+tm+")'>确定</a>\
             </td>";
@@ -194,10 +199,14 @@
 	  var skid = $('#skid'+id).val()
 	  var mm = $('#maxmoney'+id).val()
 	  var floating = $('#floating'+id).val()
+	  var enable = $('#enable'+id).val()
+	  var shname = $('#shname'+id).val()
+	  var skamount = $('#skamount'+id).val()
+	  var floating = $('#floating'+id).val()
           $.ajax({
               type:'POST',
               url:"<{:U('Admin/User/updateAcc')}>",
-              data:"id="+id+"&accid="+accid+"&skid="+skid+"&mm="+mm+"&jurl="+url+"&floating="+floating,
+              data:"id="+id+"&accid="+accid+"&skid="+skid+"&mm="+mm+"&jurl="+url+"&floating="+floating+"&enable="+enable+"&shname="+shname+"&skamount="+skamount+"&float="+floating,
               dataType:'text',
               success:function(str){
                   if(str == "ok"){
@@ -208,6 +217,7 @@
 		alert("操作成功")
                   //$('#myModal').modal('show');
                   //$("#okdelbutton").hide();
+		location.reload();
               }
           });
       }
@@ -218,6 +228,10 @@
 		$("#skid"+id).removeAttr("disabled");
 		$("#jurl"+id).removeAttr("disabled");
 		$("#maxmoney"+id).removeAttr("disabled");
+		$("#floating"+id).removeAttr("disabled");
+		$("#enable"+id).removeAttr("disabled");
+		$("#shname"+id).removeAttr("disabled");
+		$("#skamount"+id).removeAttr("disabled");
 		$("#floating"+id).removeAttr("disabled");
 	}
       function delAcc(id,status){

@@ -28,16 +28,59 @@ function handle()
         $pwd = $acc['skid'];
 
         $result = getLaOrders();
+	
 	echo $result;
+
 	$ret = json_decode($result,true);
+
         //cookie过期,重新登录
         if(json_last_error() != JSON_ERROR_NONE)
         {
+	    
+
             $res = login($account,$pwd);
-            file_put_contents(dirname(__FILE__)."/lakalarec/login.log.txt".date('Ymd'),date('Y-m-d H:i:s')."-----------autochecklogin------------".PHP_EOL,FILE_APPEND);
+	    echo "fff";
+	    echo $res;
+            file_put_contents(dirname(__FILE__)."/lakalarec/login.log.txt".date('Ymd'),date('Y-m-d H:i:s')."-----------掉线导致login------------".PHP_EOL,FILE_APPEND);
             //$result = getLaOrders();
 	    continue;
         }
+
+	else
+	{
+	      $data = $ret['rows'];
+	      $poss = array(
+		    '34622710' => 1,
+		    '34622745' => 1,
+		    '34753923' => 1,
+		    '34753938' => 1,
+		    '34753958' => 1,
+		    '34759539' => 1,
+		    '34759559' => 1,
+		    '34759576' => 1,
+		    '34759607' => 1,
+		    '34759641' => 1,
+		    '34754403' => 1,
+		    '34684412' => 1,
+		    '34684445' => 1,
+		    '34754445' => 1,
+		    '34677786' => 1,
+	      );
+	      echo "ggg";
+	      $res = login($account,$pwd);
+	      echo $res;
+	      foreach($data as $ord)
+	      {
+			$mendian = $ord['posId'];
+			if(!array_key_exists($mendian,$poss))   
+			{
+			    $res = login($account,$pwd);
+            		    file_put_contents(dirname(__FILE__)."/lakalarec/login.log.txt".date('Ymd'),date('Y-m-d H:i:s')."-----------别人的订单导致login------------".PHP_EOL,FILE_APPEND);
+			    break;
+			}
+	      }
+	}
+	
     }
 }
 

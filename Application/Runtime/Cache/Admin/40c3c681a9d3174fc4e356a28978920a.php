@@ -4,19 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="renderer" content="webkit">
-<title><?php echo C("WEB_TITLE");?></title>
+<title>微信收单统计</title>
 <link rel="shortcut icon" href="favicon.ico">
-<link href="/Public/Front/css/bootstrap.min.css" rel="stylesheet">
-<link href="/Public/Front/css/font-awesome.min.css" rel="stylesheet">
-<link href="/Public/Front/css/style.css" rel="stylesheet">
+<link href="/Public/Front/css/bootstrap.min.css?v=3.3.6" rel="stylesheet">
+<link href="/Public/Front/css/font-awesome.min.css?v=4.4.0" rel="stylesheet">
+<link href="/Public/Front/css/animate.css" rel="stylesheet">
+<link href="/Public/Front/css/style.css?v=4.1.0" rel="stylesheet">
 <link href="/Public/css/jquery.alerts.css" rel="stylesheet">
   <link href="/Public/Front/js/plugins/layui/css/layui.css" rel="stylesheet">
-<script type="text/javascript" src="/Public/js/jquery.js"></script>
-<script type="text/javascript" src="/Public/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="/Public/js/jquery.alerts.js"></script>
-<script type="text/javascript" src="/Public/laydate/laydate.js"></script>
-<script type="text/javascript" src="/Public/Admin/js/dealrecord.js"></script>
-<script type="text/javascript" src="/Public/js/zy.js"></script>
+<script type="text/javascript" src="/Public/js/jquery.js" /></script>
+<script type="text/javascript" src="/Public/js/bootstrap.min.js" /></script>
+<script type="text/javascript" src="/Public/js/jquery.alerts.js" /></script>
+<script type="text/javascript" src="/Public/Front/js/plugins/layui/layui.js" /></script>
+<script type="text/javascript" src="/Public/js/tupian.js" /></script>
+<script type="text/javascript" src="/Public/Admin/js/usercontrol.js" /></script>
+  <script type="text/javascript" src="/Public/laydate/laydate.js" /></script>
+<script type="text/javascript" src="/Public/js/zy.js" /></script>
+
   <style>
     .form-inline .form-group { margin-bottom: 5px;}
     .laydate-icon, .laydate-icon-default, .laydate-icon-danlan, .laydate-icon-dahong, .laydate-icon-molv {padding-right:0px;}
@@ -60,6 +64,7 @@
         <option value="2">上分失败</option>
         <option value="3">补单成功</option>
         <option value="4">补单失败</option>
+        <option value="5">手动补单</option>
       </select>
       <script type="text/javascript">
 	  $("#status").val('<?php echo ($_GET['status']); ?>');
@@ -80,6 +85,7 @@
   <table class="table table-bordered table-hover table-condensed table-responsive">
     <thead>
       <tr class="titlezhong">
+	 <th style="text-align:center; cursor:pointer;" id="qxqx"><span class="glyphicon glyphicon-ok"></span></th>
       	<th>&nbsp;</th>
         <th>微信交易单号</th>
         <th>所属门店</th>
@@ -88,10 +94,13 @@
         <th>状态</th>
         <th>描述</th>
         <th>交易时间</th>
+	<th><strong>删除</strong></th>
+	<th><strong>补单</strong></th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="content">
       <?php if(is_array($list)): $i = 0; $__LIST__ = $list;if( count($__LIST__)==0 ) : echo "" ;else: foreach($__LIST__ as $key=>$vo): $mod = ($i % 2 );++$i;?><tr>
+	  <td style="text-align:center;"><input type="checkbox" class="xzxz" name="xz" value="<?php echo ($vo["id"]); ?>"></td>
           <td style="text-align: center; vertical-align: middle;"><?php echo ($key+1); ?></td>
           <td style="text-align:center; color:#090;"><?php echo ($vo["payid"]); ?>
           <td style="text-align:center; color:#090;"><?php echo ($vo["mendian"]); ?>
@@ -101,8 +110,11 @@
           <td style="text-align:center; color:#369"><?php echo (grmstatus($vo['push'])); ?></td>
           <td style="text-align:center;"><?php echo ($vo["errmsg"]); ?></td>
           <td style="text-align:center;"><?php echo (date('Y-m-d H:i:s',$vo["paytime"])); ?></td>
+	<td style="text-align:center;"> <a href="javascript:delOrd('<?php echo ($vo["id"]); ?>')"><span class="glyphicon glyphicon-trash"></span></a></td>
+	<td style="text-align:center;"> <a href="javascript:buOrd('<?php echo ($vo["id"]); ?>')"><span class="glyphicon glyphicon-pencil"></span></a></td>
         </tr><?php endforeach; endif; else: echo "" ;endif; ?>
       <tr>
+	 <td colspan="1" style="text-align:center; vertical-align:middle;"><a href="javascript:;" id="qxdel"><span class="glyphicon glyphicon-trash"></span></a></td>
         <td colspan="15" style="text-align:center;"><div class="pagex"> <?php echo ($_page); ?></div></td>
       </tr>
     </tbody>
@@ -196,6 +208,71 @@
 </div>
 
 <script>
+	function buOrd(id){
+          $.ajax({
+              type:'POST',
+              url:"<?php echo U('Admin/User/buord');?>",
+              data:"id="+id,
+              dataType:'text',
+              success:function(str){
+                  if(str == "ok"){
+			alert('手动补单成功');
+                  }else{
+			alert('手动补单失败');
+                  }
+		location.reload();
+
+              }
+          });
+      }
+
+      function delOrd(id){
+          var state = confirm("确定要删除嘛？");
+          if(!state){
+              return false;
+          }
+          $.ajax({
+              type:'POST',
+              url:"<?php echo U('Admin/User/delord');?>",
+              data:"id="+id,
+              dataType:'text',
+              success:function(str){
+                  if(str == "ok"){
+			alert('删除成功');
+                  }else{
+			alert('删除失败');
+                  }
+		location.reload();
+
+              }
+          });
+      }
+
+
+      //批量删除
+      $('#qxdel').on('click', function() {
+        var idstr = '';
+        $('#content').children('tr').each(function() {
+            var $that = $(this);
+            var $cbx = $that.children('td').eq(0).children('input[type=checkbox]').is(':checked');
+	
+            if($cbx) {
+                var n = $that.children('td').eq(0).children('input[type=checkbox]:checked').val();
+                idstr += n + ',';
+            }
+        });
+          $.post("<?php echo U('Admin/User/batchdelord');?>",'ids='+idstr,function(str){
+              if(str=='ok'){
+                  alert('批量删除成功!');
+              }else{
+                  alert('批量删除失败！');
+              }
+              location.reload();
+          });
+    });
+
+
+
     $('#export').on('click',function(){
         $('#orderform').attr('action',"<?php echo U('Admin/Dealmanages/exportorder');?>");
         $('#orderform').submit();

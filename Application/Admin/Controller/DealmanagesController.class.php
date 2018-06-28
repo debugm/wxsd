@@ -109,7 +109,7 @@ class DealmanagesController extends AdminController
         
         $orderid = I("request.orderid",0,'intval');
         if ($orderid) {
-            $where['pay_orderid'] = array('eq',$orderid);
+            $where['pay_orderid'] = array('like','%'.$orderid.'%');
         }
         
         $ddlx = I("request.ddlx","");

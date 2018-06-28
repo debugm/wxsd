@@ -143,7 +143,10 @@ $result = curl_exec($ch);
 
 
 $ret = autosf('axycs',0.01);
-if($ret['StrCode'] == '处于未登录状态')
+
+
+
+if($ret['StrCode'] == '处于未登录状态' || (strpos($ret['StrCode'],'账号在别处登录') == 0) )
 {
     autologin();
 }
